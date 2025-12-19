@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: build
 
 on:
   push:
@@ -8,12 +8,51 @@ on:
 
 jobs:
   build:
+    runs-on: ubuntu-20.04
 
-    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
+
     - name: install dep
       run: sudo bash build.sh -i apt
+
     - name: build
       run: bash build.sh -j 16
+
+    - name: Package build artifacts
+      run: |
+        set -e
+        ART_DIR="release_artifacts"
+        mkdir -p "$ART_DIR"
+        # 拷贝常见的构建产物目录（根据实际产物调整）
+        if [ -d build ]; then cp -r build "$ART_DIR/"; fi
+        if [ -d bin ]; then cp -r bin "$ART_DIR/"; fi
+        if [ -d out ]; then cp -r out "$ART_DIR/"; fi
+        # 如果没有上述目录，也可以打包整个仓库的特定文件（按需修改）
+        zip -r "$ART_DIR/ieda-${GITHUB_RUN_NUMBER}.zip" "$ART_DIR" || true
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: release-${{ github.run_id }}
+        release_name: iEDA Release ${{ github.run_number }}
+        body: Automated release created by GitHub Actions for run ${{ github.run_number }}
+        draft: false
+        prerelease: false
+
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+        asset_path: release_artifacts/ieda-${{ github.run_number }}.zip
+        asset_name: ieda-${{ github.run_number }}.zip
+        asset_content_type: application/zip
