@@ -1,58 +1,52 @@
-name: build
+name: Build and Release
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
+
+# 允许写入 contents（创建 release / 上传资产）
+permissions:
+  contents: write
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
-    permissions:
-      contents: write
+    # 使用 GitHub 托管的 Linux runner，但在 Debian 11 容器里执行
+    runs-on: ubuntu-latest
+    container:
+      image: debian:11
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: install dep
-      run: sudo bash build.sh -i apt
+      - name: Install dependencies (Debian 11)
+        run: |
+          apt-get update
+          # 如果 build.sh 需要 sudo，容器内为 root，直接运行即可
+          bash build.sh -i apt
 
-    - name: build
-      run: bash build.sh -j 16
+      - name: Build
+        run: bash build.sh -j 16
 
-    - name: Package build artifacts
-      run: |
-        set -e
-        ART_DIR="release_artifacts"
-        mkdir -p "$ART_DIR"
-        # 拷贝常见的构建产物目录（根据实际产物调整）
-        if [ -d build ]; then cp -r build "$ART_DIR/"; fi
-        if [ -d bin ]; then cp -r bin "$ART_DIR/"; fi
-        if [ -d out ]; then cp -r out "$ART_DIR/"; fi
-        # 如果没有上述目录，也可以打包整个仓库的特定文件（按需修改）
-        zip -r "$ART_DIR/ieda-${GITHUB_RUN_NUMBER}.zip" "$ART_DIR" || true
+      - name: Package artifacts
+        run: |
+          mkdir -p release
+          # 假设构建输出在 build/ 目录；请根据实际输出调整以下命令
+          if [ -d build ]; then
+            tar -czf release/iEDA-${{ github.sha }}.tar.gz build
+          else
+            # 如果没有 build 目录，把 repo 根或自定义产物打包
+            tar -czf release/iEDA-${{ github.sha }}.tar.gz .
+          fi
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: release-${{ github.run_id }}
-        release_name: iEDA Release ${{ github.run_number }}
-        body: Automated release created by GitHub Actions for run ${{ github.run_number }}
-        draft: false
-        prerelease: false
-
-    - name: Upload release asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-
-        asset_path: release_artifacts/ieda-${{ github.run_number }}.zip
-        asset_name: ieda-${{ github.run_number }}.zip
-        asset_content_type: application/zip
+      - name: Create GitHub Release and upload assets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: ncipollo/release-action@v1
+        with:
+          # 使用 commit SHA 作为 tag；也可以改成使用语义化版本或其它 tag
+          tag: ${{ github.sha }}
+          name: Release ${{ github.sha }}
+          body: Automated build from ${{ github.ref }} (commit ${{ github.sha }})
+          files: release/iEDA-${{ github.sha }}.tar.gz
