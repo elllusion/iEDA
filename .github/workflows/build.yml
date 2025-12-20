@@ -23,10 +23,13 @@ jobs:
 
       - name: Install dependencies (Debian 11)
         run: |
-          apt-get update
+          sed -i \
+          -e 's@//archive.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' \
+          -e 's@//security.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' \
+          /etc/apt/sources.list
           # 如果 build.sh 需要 sudo，容器内为 root，直接运行即可
           export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y \
+          apt-get update && apt-get install -y \
           g++-10 cmake ninja-build \
           tcl-dev libgflags-dev libgoogle-glog-dev libboost-all-dev libgtest-dev flex\
           libeigen3-dev libunwind-dev libmetis-dev libgmp-dev bison rustc cargo\
