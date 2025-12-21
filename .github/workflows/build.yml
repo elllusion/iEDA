@@ -36,7 +36,9 @@ jobs:
           libhwloc-dev libcairo2-dev libcurl4-openssl-dev libtbb-dev git
 
       - name: Build
-        run: bash build.sh -j 16
+        run: |
+          cargo fix --edition
+          bash build.sh -j 16
 
       - name: Package artifacts
         run: |
