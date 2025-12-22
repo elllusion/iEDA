@@ -37,7 +37,9 @@ jobs:
 
       - name: Build
         run: |
+          cd src/database/manager/parser/verilog/verilog-rust/verilog-parser
           cargo fix --edition
+          cd -
           bash build.sh -j 16
 
       - name: Package artifacts
