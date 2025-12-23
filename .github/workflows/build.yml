@@ -53,7 +53,7 @@ jobs:
             tar -czf release/iEDA-${{ github.sha }}.tar.gz .
           fi
 
-      # 生成短 SHA（7 位）并导出为步骤输出，供后续作为 tag 使用
+     # 生成短 SHA（7 位）并导出为步骤输出，供后续作为 tag 使用
       - name: Set short SHA
         id: vars
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
