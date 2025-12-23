@@ -13,9 +13,9 @@ permissions:
 jobs:
   build:
     # 使用 GitHub 托管的 Linux runner，但在 Debian 11 容器里执行
-    runs-on: ubuntu-latest
-    container:
-      image: debian:11
+    runs-on: ubuntu-22.04
+    #container:
+    #  image: debian:11
 
     steps:
       - name: Checkout
