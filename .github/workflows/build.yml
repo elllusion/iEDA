@@ -52,29 +52,10 @@ jobs:
             # 如果没有 build 目录，把 repo 根或自定义产物打包
             tar -czf release/iEDA-${{ github.sha }}.tar.gz .
           fi
-
-     # 生成短 SHA（7 位）并导出为步骤输出，供后续作为 tag 使用
-      - name: Set short SHA
-        id: vars
-        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      # 创建 Release（使用短 SHA 避免 40 字符 hex 被禁止）
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: release-${{ steps.vars.outputs.short_sha }}
-          release_name: Release ${{ steps.vars.outputs.short_sha }}
-          body: Automated build from ${{ github.ref }} (commit ${{ github.sha }})
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
-
+          
       # 上传 release 资产
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/iEDA-${{ github.sha }}.tar.gz
-          asset_name: iEDA-${{ github.sha }}.tar.gz
-          asset_content_type: application/gzip
+          files: |
+            release/iEDA-${{ github.sha }}.tar.gz
