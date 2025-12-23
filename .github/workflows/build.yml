@@ -58,12 +58,23 @@ jobs:
         id: vars
         run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release and upload assets
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: ncipollo/release-action@v1
+      # 创建 Release（使用短 SHA 避免 40 字符 hex 被禁止）
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          # 使用短 sha（7 位）作为 tag 后缀，避免 40 十六进制字符限制
-          tag: release-${{ steps.vars.outputs.short_sha }}
-          name: Release ${{ steps.vars.outputs.short_sha }}
+          tag_name: release-${{ steps.vars.outputs.short_sha }}
+          release_name: Release ${{ steps.vars.outputs.short_sha }}
           body: Automated build from ${{ github.ref }} (commit ${{ github.sha }})
-          files: release/iEDA-${{ github.sha }}.tar.gz
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 上传 release 资产
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/iEDA-${{ github.sha }}.tar.gz
+          asset_name: iEDA-${{ github.sha }}.tar.gz
+          asset_content_type: application/gzip
