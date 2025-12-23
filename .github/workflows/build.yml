@@ -53,12 +53,17 @@ jobs:
             tar -czf release/iEDA-${{ github.sha }}.tar.gz .
           fi
 
+      # 生成短 SHA（7 位）并导出为步骤输出，供后续作为 tag 使用
+      - name: Set short SHA
+        id: vars
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release and upload assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: ncipollo/release-action@v1
         with:
-          # 使用 commit SHA 作为 tag；也可以改成使用语义化版本或其它 tag
-          tag: ${{ github.sha }}
-          name: Release ${{ github.sha }}
+          # 使用短 sha（7 位）作为 tag 后缀，避免 40 十六进制字符限制
+          tag: release-${{ steps.vars.outputs.short_sha }}
+          name: Release ${{ steps.vars.outputs.short_sha }}
           body: Automated build from ${{ github.ref }} (commit ${{ github.sha }})
           files: release/iEDA-${{ github.sha }}.tar.gz
