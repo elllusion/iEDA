@@ -29,7 +29,7 @@ jobs:
           /etc/apt/sources.list
           # 如果 build.sh 需要 sudo，容器内为 root，直接运行即可
           export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get update && apt-get install -y \
+          sudo apt-get update && sudo apt-get install -y \
           g++-10 cmake ninja-build \
           tcl-dev libgflags-dev libgoogle-glog-dev libboost-all-dev libgtest-dev flex \
           libeigen3-dev libunwind-dev libmetis-dev libgmp-dev bison rustc cargo \
