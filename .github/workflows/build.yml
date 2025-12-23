@@ -53,9 +53,15 @@ jobs:
             tar -czf release/iEDA-${{ github.sha }}.tar.gz .
           fi
           
-      # 上传 release 资产
-      - name: Upload Release Asset
+      - name: Set short SHA
+        id: vars
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Create Release (softprops)
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release/iEDA-${{ github.sha }}.tar.gz
+          tag_name: release-${{ steps.vars.outputs.short_sha }}        # 必需：tag 名称
+          name: Release ${{ steps.vars.outputs.short_sha }}
+          files: release/iEDA-${{ github.sha }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}                    # 必需：认证
