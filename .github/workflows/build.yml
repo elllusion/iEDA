@@ -12,10 +12,7 @@ permissions:
 
 jobs:
   build:
-    # 使用 GitHub 托管的 Linux runner，但在 Debian 11 容器里执行
     runs-on: ubuntu-22.04
-    #container:
-    #  image: debian:11
 
     steps:
       - name: Checkout
@@ -27,7 +24,6 @@ jobs:
           -e 's@//archive.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' \
           -e 's@//security.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' \
           /etc/apt/sources.list
-          # 如果 build.sh 需要 sudo，容器内为 root，直接运行即可
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update && sudo apt-get install -y \
           g++-10 cmake ninja-build \
@@ -37,21 +33,19 @@ jobs:
 
       - name: Build
         run: |
-          #cd src/database/manager/parser/verilog/verilog-rust/verilog-parser
-          #cargo fix --edition
-          #cd -
           bash build.sh -j 16
 
       - name: Package artifacts
         run: |
           mkdir -p release
           # 假设构建输出在 build/ 目录；请根据实际输出调整以下命令
-          if [ -d build ]; then
-            tar -czf release/iEDA-${{ github.sha }}.tar.gz build
-          else
+          #if [ -d build ]; then
+          #  tar -czf release/iEDA-${{ github.sha }}.tar.gz build
+          #else
             # 如果没有 build 目录，把 repo 根或自定义产物打包
-            tar -czf release/iEDA-${{ github.sha }}.tar.gz .
-          fi
+          #  tar -czf release/iEDA-${{ github.sha }}.tar.gz .
+          #fi
+          tar -czf release/iEDA-${{ github.sha }}.tar.gz .
           
       - name: Set short SHA
         id: vars
@@ -60,8 +54,8 @@ jobs:
       - name: Create Release (softprops)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: release-${{ steps.vars.outputs.short_sha }}        # 必需：tag 名称
+          tag_name: release-${{ steps.vars.outputs.short_sha }}
           name: Release ${{ steps.vars.outputs.short_sha }}
           files: release/iEDA-${{ github.sha }}.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}                    # 必需：认证
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
