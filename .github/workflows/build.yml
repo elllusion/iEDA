@@ -37,15 +37,15 @@ jobs:
 
       - name: Package artifacts
         run: |
-          mkdir -p release
+          mkdir -p ../release
           # 假设构建输出在 build/ 目录；请根据实际输出调整以下命令
           #if [ -d build ]; then
-          #  tar -czf release/iEDA-${{ github.sha }}.tar.gz build
+          #  tar -czf ../release/iEDA-${{ github.sha }}.tar.gz build
           #else
             # 如果没有 build 目录，把 repo 根或自定义产物打包
-          #  tar -czf release/iEDA-${{ github.sha }}.tar.gz .
+          #  tar -czf ../release/iEDA-${{ github.sha }}.tar.gz .
           #fi
-          tar -czf release/iEDA-${{ github.sha }}.tar.gz .
+          tar -czf ../release/iEDA-${{ github.sha }}.tar.gz .
           
       - name: Set short SHA
         id: vars
@@ -56,6 +56,6 @@ jobs:
         with:
           tag_name: release-${{ steps.vars.outputs.short_sha }}
           name: Release ${{ steps.vars.outputs.short_sha }}
-          files: release/iEDA-${{ github.sha }}.tar.gz
+          files: ../release/iEDA-${{ github.sha }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
